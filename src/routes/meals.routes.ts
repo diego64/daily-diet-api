@@ -73,4 +73,28 @@ app.delete('/:mealId', { preHandler: [checkSessionIdExists] }, async(request, re
 
   return reply.status(204).send()
 })
+
+app.get('/',{ preHandler: [checkSessionIdExists] },async (request, reply) => {
+  const meals = await knex('meals')
+    .where({ user_id: request.user?.id })
+    .orderBy('date', 'desc')
+
+    return reply.send({ meals })
+  },
+)
+
+app.get('/:mealId', { preHandler: [checkSessionIdExists] }, async (request, reply) => {
+  const paramsSchema = z.object({ mealId: z.string().uuid() })
+
+  const { mealId } = paramsSchema.parse(request.params)
+
+  const meal = await knex('meals').where({ id: mealId }).first()
+
+  if (!meal) {
+    return reply.status(404).send({ error: 'Meal not found' })
+  }
+
+  return reply.send({ meal })
+  },
+)
 }
